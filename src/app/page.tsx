@@ -29,20 +29,26 @@ type OrchestratorResponse = {
     };
     majorSpending: {
       topExpenseDescriptions: Array<{ name: string; total: number; count: number }>;
-      topExpenseByGspcEvent: Array<{ name: string; total: number; count: number }>;
+      topExpenseByEvent: Array<{ name: string; total: number; count: number }>;
     };
     year2025?: {
       byCategory: {
         topInflows: Array<{ name: string; total: number; count: number }>;
         topOutflows: Array<{ name: string; total: number; count: number }>;
       };
-      byGspcEvent: {
+      byEvent: {
         topInflows: Array<{ name: string; total: number; count: number }>;
         topOutflows: Array<{ name: string; total: number; count: number }>;
       };
       totals: { income: number; expense: number; net: number };
     };
-    anomalies: Array<{ kind: string; title: string; date?: string; amount?: number }>;
+    anomalies: Array<{
+      kind: string;
+      title: string;
+      date?: string;
+      amount?: number;
+      details?: Record<string, unknown>;
+    }>;
   };
   insights: Array<{
     id: string;
@@ -319,7 +325,7 @@ export default function Home() {
                 }}
               />
               <p className="mt-2 text-xs text-zinc-500">
-                Expected columns: Bank Details, Account Number, Post Date, Check, Description, Debit, Credit, Status, Balance, Classification, GSPC Event, GSPC Event Details
+                Expected columns: Bank Details, Account Number, Post Date, Check, Description, Debit, Credit, Status, Balance, Classification, Event, Event Details
               </p>
             </div>
             <button
@@ -474,9 +480,9 @@ export default function Home() {
                     outflows={result.analysis.year2025.byCategory.topOutflows}
                   />
                   <BreakdownCard
-                    title="Breakdown by GSPC Event"
-                    inflows={result.analysis.year2025.byGspcEvent.topInflows}
-                    outflows={result.analysis.year2025.byGspcEvent.topOutflows}
+                    title="Breakdown by Event"
+                    inflows={result.analysis.year2025.byEvent.topInflows}
+                    outflows={result.analysis.year2025.byEvent.topOutflows}
                   />
                 </div>
               </section>
@@ -575,20 +581,20 @@ export default function Home() {
 
                 <div className="rounded-lg border border-zinc-200 p-4">
                   <div className="flex items-center justify-between">
-                    <div className="font-medium">By GSPC Event</div>
+                    <div className="font-medium">By Event</div>
                     <div className="text-xs text-zinc-500">Top 10</div>
                   </div>
                   <div className="mt-3 overflow-x-auto">
                     <table className="w-full text-left text-sm">
                       <thead className="text-xs uppercase text-zinc-500">
                         <tr>
-                          <th className="py-2 pr-4">GSPC Event</th>
+                          <th className="py-2 pr-4">Event</th>
                           <th className="py-2 pr-4">Total</th>
                           <th className="py-2 pr-4">Count</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {result.analysis.majorSpending.topExpenseByGspcEvent.map((x) => (
+                        {result.analysis.majorSpending.topExpenseByEvent.map((x) => (
                           <tr key={x.name} className="border-t border-zinc-100">
                             <td className="py-2 pr-4">{x.name}</td>
                             <td className="py-2 pr-4">{money(x.total)}</td>

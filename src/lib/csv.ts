@@ -11,8 +11,8 @@ const REQUIRED_HEADERS = [
   "Status",
   "Balance",
   "Classification",
-  "GSPC Event",
-  "GSPC Event Details",
+  "Event",
+  "Event Details",
 ] as const;
 
 function normalizeHeader(h: string) {
@@ -142,8 +142,8 @@ export function parseTransactionsFromCsv(csvText: string): {
     const balanceRaw = get("Balance");
     const balance = balanceRaw ? parseMoney(balanceRaw) : undefined;
     const classification = get("Classification");
-    const gspcEvent = get("GSPC Event");
-    const gspcEventDetails = get("GSPC Event Details");
+    const event = get("Event");
+    const eventDetails = get("Event Details");
 
     const category = classification;
 
@@ -176,8 +176,8 @@ export function parseTransactionsFromCsv(csvText: string): {
       status: status || undefined,
       classification: classification || undefined,
       category: category || undefined,
-      gspcEvent: gspcEvent || undefined,
-      gspcEventDetails: gspcEventDetails || undefined,
+      event: event || undefined,
+      eventDetails: eventDetails || undefined,
       debit: debit || undefined,
       credit: credit || undefined,
     };

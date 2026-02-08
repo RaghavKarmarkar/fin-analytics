@@ -46,12 +46,12 @@ export class WorksheetAnalysisAgent {
 
     const byMonth = new Map<string, { income: number; expense: number; ending?: number; lastTs?: number }>();
     const expenseByCategory = new Map<string, { total: number; count: number }>();
-    const expenseByGspcEvent = new Map<string, { total: number; count: number }>();
+    const expenseByEvent = new Map<string, { total: number; count: number }>();
 
     const inflow2025ByCategory = new Map<string, { total: number; count: number }>();
     const outflow2025ByCategory = new Map<string, { total: number; count: number }>();
-    const inflow2025ByGspcEvent = new Map<string, { total: number; count: number }>();
-    const outflow2025ByGspcEvent = new Map<string, { total: number; count: number }>();
+    const inflow2025ByEvent = new Map<string, { total: number; count: number }>();
+    const outflow2025ByEvent = new Map<string, { total: number; count: number }>();
 
     const dailyExpense = new Map<string, number>();
     const anomalies: Anomaly[] = [];
@@ -73,7 +73,7 @@ export class WorksheetAnalysisAgent {
         if (t.direction === "expense") expense2025 += Math.abs(t.amount);
 
         const categoryKey = normalizeKey(t.category || t.description || "UNCATEGORIZED");
-        const gspcKey = normalizeKey(t.gspcEvent || "NO EVENT");
+        const evtKey = normalizeKey(t.event || "NO EVENT");
         if (t.direction === "income") {
           const aggCat = inflow2025ByCategory.get(categoryKey) ?? { total: 0, count: 0 };
           inflow2025ByCategory.set(categoryKey, {
@@ -81,8 +81,8 @@ export class WorksheetAnalysisAgent {
             count: aggCat.count + 1,
           });
 
-          const aggEvt = inflow2025ByGspcEvent.get(gspcKey) ?? { total: 0, count: 0 };
-          inflow2025ByGspcEvent.set(gspcKey, {
+          const aggEvt = inflow2025ByEvent.get(evtKey) ?? { total: 0, count: 0 };
+          inflow2025ByEvent.set(evtKey, {
             total: aggEvt.total + Math.abs(t.amount),
             count: aggEvt.count + 1,
           });
@@ -94,8 +94,8 @@ export class WorksheetAnalysisAgent {
             count: aggCat.count + 1,
           });
 
-          const aggEvt = outflow2025ByGspcEvent.get(gspcKey) ?? { total: 0, count: 0 };
-          outflow2025ByGspcEvent.set(gspcKey, {
+          const aggEvt = outflow2025ByEvent.get(evtKey) ?? { total: 0, count: 0 };
+          outflow2025ByEvent.set(evtKey, {
             total: aggEvt.total + Math.abs(t.amount),
             count: aggEvt.count + 1,
           });
@@ -127,9 +127,9 @@ export class WorksheetAnalysisAgent {
           count: agg.count + 1,
         });
 
-        const evtKey = normalizeKey(t.gspcEvent || "NO EVENT");
-        const evtAgg = expenseByGspcEvent.get(evtKey) ?? { total: 0, count: 0 };
-        expenseByGspcEvent.set(evtKey, {
+        const evtKey = normalizeKey(t.event || "NO EVENT");
+        const evtAgg = expenseByEvent.get(evtKey) ?? { total: 0, count: 0 };
+        expenseByEvent.set(evtKey, {
           total: evtAgg.total + Math.abs(t.amount),
           count: evtAgg.count + 1,
         });
@@ -154,7 +154,7 @@ export class WorksheetAnalysisAgent {
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
 
-    const topExpenseByGspcEvent: SpendItem[] = Array.from(expenseByGspcEvent.entries())
+    const topExpenseByEvent: SpendItem[] = Array.from(expenseByEvent.entries())
       .map(([name, v]) => ({ name, total: v.total, count: v.count }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
@@ -169,12 +169,12 @@ export class WorksheetAnalysisAgent {
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
 
-    const topInflows2025ByGspcEvent: SpendItem[] = Array.from(inflow2025ByGspcEvent.entries())
+    const topInflows2025ByEvent: SpendItem[] = Array.from(inflow2025ByEvent.entries())
       .map(([name, v]) => ({ name, total: v.total, count: v.count }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
 
-    const topOutflows2025ByGspcEvent: SpendItem[] = Array.from(outflow2025ByGspcEvent.entries())
+    const topOutflows2025ByEvent: SpendItem[] = Array.from(outflow2025ByEvent.entries())
       .map(([name, v]) => ({ name, total: v.total, count: v.count }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
@@ -209,7 +209,7 @@ export class WorksheetAnalysisAgent {
     return {
       totals: { income, expense, net },
       series: { monthly },
-      majorSpending: { topExpenseDescriptions, topExpenseByGspcEvent },
+      majorSpending: { topExpenseDescriptions, topExpenseByEvent },
       year2025:
         txCount2025 > 0
           ? {
@@ -217,9 +217,9 @@ export class WorksheetAnalysisAgent {
                 topInflows: topInflows2025ByCategory,
                 topOutflows: topOutflows2025ByCategory,
               },
-              byGspcEvent: {
-                topInflows: topInflows2025ByGspcEvent,
-                topOutflows: topOutflows2025ByGspcEvent,
+              byEvent: {
+                topInflows: topInflows2025ByEvent,
+                topOutflows: topOutflows2025ByEvent,
               },
               totals: {
                 income: income2025,

@@ -7,8 +7,8 @@ export type Transaction = {
   status?: string;
   classification?: string;
   category?: string;
-  gspcEvent?: string;
-  gspcEventDetails?: string;
+  event?: string;
+  eventDetails?: string;
   debit?: number;
   credit?: number;
   amount: number;
@@ -54,14 +54,14 @@ export type AnalysisResult = {
   };
   majorSpending: {
     topExpenseDescriptions: SpendItem[];
-    topExpenseByGspcEvent: SpendItem[];
+    topExpenseByEvent: SpendItem[];
   };
   year2025?: {
     byCategory: {
       topInflows: SpendItem[];
       topOutflows: SpendItem[];
     };
-    byGspcEvent: {
+    byEvent: {
       topInflows: SpendItem[];
       topOutflows: SpendItem[];
     };

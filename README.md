@@ -59,7 +59,7 @@ npm run start
 The CSV must include these columns (in any order):
 
 ```text
-Bank Details,Account Number,Post Date,Check,Description,Debit,Credit,Status,Balance,Classification,GSPC Event,GSPC Event Details
+Bank Details,Account Number,Post Date,Check,Description,Debit,Credit,Status,Balance,Classification,Event,Event Details
 ```
 
 Notes:
