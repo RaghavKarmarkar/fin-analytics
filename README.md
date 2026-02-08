@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agentic Finance Summary
 
-## Getting Started
+Next.js app that:
 
-First, run the development server:
+- Uploads a bank transactions CSV
+- Produces financial analysis + insights + action recommendations
+- Provides a streaming chatbot UI powered by Anthropic Claude (context is the uploaded CSV’s computed results)
+
+## Prerequisites
+
+- Node.js: **20.x**
+- npm: comes with Node
+- (Recommended) `nvm` to manage Node versions
+
+## Setup
+
+1. Install dependencies
+
+```bash
+npm install
+```
+
+2. Configure environment variables
+
+Create a file named `.env.local` in the project root:
+
+```env
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+```
+
+Do not commit `.env.local`.
+
+## Run (development)
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- http://localhost:3000
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Build (production)
 
-## Learn More
+```bash
+npm run build
+npm run start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Using the app
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Open the home page.
+2. Upload a CSV with the expected schema.
+3. Click **Analyze**.
+4. Use **Chat about this upload** to ask questions about the results (streaming response).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## CSV schema (required header row)
 
-## Deploy on Vercel
+The CSV must include these columns (in any order):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```text
+Bank Details,Account Number,Post Date,Check,Description,Debit,Credit,Status,Balance,Classification,GSPC Event,GSPC Event Details
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Notes:
+
+- `Debit` and `Credit` are parsed as absolute values.
+- `Classification` is mapped into the internal `category` field for category-based reporting.
+
+## API routes
+
+- `POST /api/analyze`
+  - Accepts a CSV upload and returns `{ analysis, insights, actions }`.
+- `POST /api/chat`
+  - Accepts `{ message, context }` and streams a text response from Claude.
+  - Requires `ANTHROPIC_API_KEY`.
+
+## Troubleshooting
+
+- **Chat says “Missing ANTHROPIC_API_KEY”**
+  - Ensure `.env.local` exists at the project root and contains `ANTHROPIC_API_KEY=...`.
+  - Restart `npm run dev` after editing `.env.local`.
+
+- **Port 3000 already in use**
+  - Stop the process using port 3000, or start Next.js on a different port.
+
+- **Node version issues**
+  - Make sure you are using Node 20.x.
