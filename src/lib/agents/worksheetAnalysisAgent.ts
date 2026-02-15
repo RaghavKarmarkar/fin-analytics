@@ -2,6 +2,7 @@ import {
   AnalysisResult,
   Anomaly,
   ClassifiedTransaction,
+  EventDetailsSpendItem,
   MonthlySeriesPoint,
   SpendItem,
 } from "@/lib/types";
@@ -53,6 +54,15 @@ export class WorksheetAnalysisAgent {
     const inflow2025ByEvent = new Map<string, { total: number; count: number }>();
     const outflow2025ByEvent = new Map<string, { total: number; count: number }>();
 
+    const inflow2025ByEventDetails = new Map<
+      string,
+      { event: string; eventDetails: string; total: number; count: number }
+    >();
+    const outflow2025ByEventDetails = new Map<
+      string,
+      { event: string; eventDetails: string; total: number; count: number }
+    >();
+
     const dailyExpense = new Map<string, number>();
     const anomalies: Anomaly[] = [];
 
@@ -74,6 +84,8 @@ export class WorksheetAnalysisAgent {
 
         const categoryKey = normalizeKey(t.category || t.description || "UNCATEGORIZED");
         const evtKey = normalizeKey(t.event || "NO EVENT");
+        const evtDetailsKey = normalizeKey(t.eventDetails || "NO DETAILS");
+        const evtDetailsMapKey = `${evtKey}|||${evtDetailsKey}`;
         if (t.direction === "income") {
           const aggCat = inflow2025ByCategory.get(categoryKey) ?? { total: 0, count: 0 };
           inflow2025ByCategory.set(categoryKey, {
@@ -85,6 +97,19 @@ export class WorksheetAnalysisAgent {
           inflow2025ByEvent.set(evtKey, {
             total: aggEvt.total + Math.abs(t.amount),
             count: aggEvt.count + 1,
+          });
+
+          const aggEvtDetails = inflow2025ByEventDetails.get(evtDetailsMapKey) ?? {
+            event: evtKey,
+            eventDetails: evtDetailsKey,
+            total: 0,
+            count: 0,
+          };
+          inflow2025ByEventDetails.set(evtDetailsMapKey, {
+            event: aggEvtDetails.event,
+            eventDetails: aggEvtDetails.eventDetails,
+            total: aggEvtDetails.total + Math.abs(t.amount),
+            count: aggEvtDetails.count + 1,
           });
         }
         if (t.direction === "expense") {
@@ -98,6 +123,19 @@ export class WorksheetAnalysisAgent {
           outflow2025ByEvent.set(evtKey, {
             total: aggEvt.total + Math.abs(t.amount),
             count: aggEvt.count + 1,
+          });
+
+          const aggEvtDetails = outflow2025ByEventDetails.get(evtDetailsMapKey) ?? {
+            event: evtKey,
+            eventDetails: evtDetailsKey,
+            total: 0,
+            count: 0,
+          };
+          outflow2025ByEventDetails.set(evtDetailsMapKey, {
+            event: aggEvtDetails.event,
+            eventDetails: aggEvtDetails.eventDetails,
+            total: aggEvtDetails.total + Math.abs(t.amount),
+            count: aggEvtDetails.count + 1,
           });
         }
       }
@@ -179,6 +217,20 @@ export class WorksheetAnalysisAgent {
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
 
+    const topInflows2025ByEventDetails: EventDetailsSpendItem[] = Array.from(
+      inflow2025ByEventDetails.values()
+    )
+      .map((v) => ({ event: v.event, eventDetails: v.eventDetails, total: v.total, count: v.count }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+
+    const topOutflows2025ByEventDetails: EventDetailsSpendItem[] = Array.from(
+      outflow2025ByEventDetails.values()
+    )
+      .map((v) => ({ event: v.event, eventDetails: v.eventDetails, total: v.total, count: v.count }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+
     for (const e of expenseTxs.slice(0, 3)) {
       anomalies.push({
         kind: "large_expense",
@@ -220,6 +272,10 @@ export class WorksheetAnalysisAgent {
               byEvent: {
                 topInflows: topInflows2025ByEvent,
                 topOutflows: topOutflows2025ByEvent,
+              },
+              byEventDetails: {
+                topInflows: topInflows2025ByEventDetails,
+                topOutflows: topOutflows2025ByEventDetails,
               },
               totals: {
                 income: income2025,

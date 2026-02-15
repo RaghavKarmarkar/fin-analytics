@@ -35,6 +35,13 @@ export type SpendItem = {
   count: number;
 };
 
+ export type EventDetailsSpendItem = {
+  event: string;
+  eventDetails: string;
+  total: number;
+  count: number;
+ };
+
 export type Anomaly = {
   kind: "large_expense" | "spend_spike" | "balance_drop";
   title: string;
@@ -64,6 +71,10 @@ export type AnalysisResult = {
     byEvent: {
       topInflows: SpendItem[];
       topOutflows: SpendItem[];
+    };
+    byEventDetails: {
+      topInflows: EventDetailsSpendItem[];
+      topOutflows: EventDetailsSpendItem[];
     };
     totals: {
       income: number;

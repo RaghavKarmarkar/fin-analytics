@@ -40,6 +40,10 @@ type OrchestratorResponse = {
         topInflows: Array<{ name: string; total: number; count: number }>;
         topOutflows: Array<{ name: string; total: number; count: number }>;
       };
+      byEventDetails: {
+        topInflows: Array<{ event: string; eventDetails: string; total: number; count: number }>;
+        topOutflows: Array<{ event: string; eventDetails: string; total: number; count: number }>;
+      };
       totals: { income: number; expense: number; net: number };
     };
     anomalies: Array<{
@@ -82,6 +86,115 @@ function money(n: number) {
     currency: "USD",
     maximumFractionDigits: 0,
   });
+}
+
+function EventDetailsBreakdownCard({
+  title,
+  inflows,
+  outflows,
+}: {
+  title: string;
+  inflows: Array<{ event: string; eventDetails: string; total: number; count: number }>;
+  outflows: Array<{ event: string; eventDetails: string; total: number; count: number }>;
+}) {
+  const inflowChartData = inflows.map((x) => ({
+    name: `${x.event} — ${x.eventDetails}`,
+    total: x.total,
+    count: x.count,
+  }));
+  const outflowChartData = outflows.map((x) => ({
+    name: `${x.event} — ${x.eventDetails}`,
+    total: x.total,
+    count: x.count,
+  }));
+
+  return (
+    <div className="rounded-lg border border-zinc-200 p-4">
+      <div className="font-medium">{title}</div>
+
+      <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div>
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium text-zinc-800">Inflows</div>
+            <div className="text-xs text-zinc-500">Top 10</div>
+          </div>
+          <div className="mt-3 h-[240px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={inflowChartData} margin={{ left: 8, right: 16 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" hide />
+                <YAxis tickFormatter={(v) => compactMoney(Number(v))} tick={{ fontSize: 12 }} />
+                <Tooltip formatter={(value) => money(Number(value))} />
+                <Bar dataKey="total" fill="#16a34a" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase text-zinc-500">
+                <tr>
+                  <th className="py-2 pr-4">Event</th>
+                  <th className="py-2 pr-4">Event Details</th>
+                  <th className="py-2 pr-4">Total</th>
+                  <th className="py-2 pr-4">Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inflows.map((x) => (
+                  <tr key={`${x.event}|||${x.eventDetails}`} className="border-t border-zinc-100">
+                    <td className="py-2 pr-4">{x.event}</td>
+                    <td className="py-2 pr-4">{x.eventDetails}</td>
+                    <td className="py-2 pr-4">{money(x.total)}</td>
+                    <td className="py-2 pr-4">{x.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium text-zinc-800">Outflows</div>
+            <div className="text-xs text-zinc-500">Top 10</div>
+          </div>
+          <div className="mt-3 h-[240px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={outflowChartData} margin={{ left: 8, right: 16 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" hide />
+                <YAxis tickFormatter={(v) => compactMoney(Number(v))} tick={{ fontSize: 12 }} />
+                <Tooltip formatter={(value) => money(Number(value))} />
+                <Bar dataKey="total" fill="#dc2626" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase text-zinc-500">
+                <tr>
+                  <th className="py-2 pr-4">Event</th>
+                  <th className="py-2 pr-4">Event Details</th>
+                  <th className="py-2 pr-4">Total</th>
+                  <th className="py-2 pr-4">Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {outflows.map((x) => (
+                  <tr key={`${x.event}|||${x.eventDetails}`} className="border-t border-zinc-100">
+                    <td className="py-2 pr-4">{x.event}</td>
+                    <td className="py-2 pr-4">{x.eventDetails}</td>
+                    <td className="py-2 pr-4">{money(x.total)}</td>
+                    <td className="py-2 pr-4">{x.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function compactMoney(n: number) {
@@ -202,6 +315,7 @@ export default function Home() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [hasAnthropicKey, setHasAnthropicKey] = useState<boolean | null>(null);
 
   async function analyze() {
     if (!file) return;
@@ -211,6 +325,7 @@ export default function Home() {
     setChatMessages([]);
     setChatInput("");
     setChatError(null);
+    setHasAnthropicKey(null);
 
     try {
       const fd = new FormData();
@@ -229,6 +344,16 @@ export default function Home() {
       }
 
       setResult(json);
+
+      try {
+        const envRes = await fetch("/api/env-check");
+        if (envRes.ok) {
+          const envJson = (await envRes.json()) as { hasAnthropicKey?: boolean };
+          setHasAnthropicKey(Boolean(envJson.hasAnthropicKey));
+        }
+      } catch {
+        // ignore
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Unknown error";
       setError(message);
@@ -371,9 +496,9 @@ export default function Home() {
             <section className="rounded-xl border border-zinc-200 bg-white p-6">
               <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
                 <h2 className="text-lg font-semibold">Chat about this upload</h2>
-                <div className="text-xs text-zinc-500">
-                  Requires `ANTHROPIC_API_KEY` in your environment.
-                </div>
+                {hasAnthropicKey === false ? (
+                  <div className="text-xs text-red-700">Missing `ANTHROPIC_API_KEY` in your environment.</div>
+                ) : null}
               </div>
 
               <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
@@ -483,6 +608,11 @@ export default function Home() {
                     title="Breakdown by Event"
                     inflows={result.analysis.year2025.byEvent.topInflows}
                     outflows={result.analysis.year2025.byEvent.topOutflows}
+                  />
+                  <EventDetailsBreakdownCard
+                    title="Breakdown by Event Details"
+                    inflows={result.analysis.year2025.byEventDetails.topInflows}
+                    outflows={result.analysis.year2025.byEventDetails.topOutflows}
                   />
                 </div>
               </section>

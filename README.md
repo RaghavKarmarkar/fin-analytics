@@ -26,6 +26,7 @@ Create a file named `.env.local` in the project root:
 
 ```env
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
 ```
 
 Do not commit `.env.local`.
