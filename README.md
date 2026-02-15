@@ -8,19 +8,40 @@ Next.js app that:
 
 ## Prerequisites
 
-- Node.js: **20.x**
+- macOS / Linux / Windows
+- Node.js: **20.x** (required)
 - npm: comes with Node
 - (Recommended) `nvm` to manage Node versions
+- Git (to clone the repository)
+- Anthropic API Key
+  - Set as `ANTHROPIC_API_KEY` in `.env.local`
 
 ## Setup
 
-1. Install dependencies
+1. Clone the repository
+
+```bash
+git clone https://github.com/RaghavKarmarkar/fin-analytics.git
+cd fin-analytics
+```
+
+2. Use Node.js 20
+
+If you use `nvm`:
+
+```bash
+nvm install 20
+nvm use 20
+node -v
+```
+
+3. Install dependencies
 
 ```bash
 npm install
 ```
 
-2. Configure environment variables
+4. Configure environment variables
 
 Create a file named `.env.local` in the project root:
 
@@ -40,6 +61,12 @@ npm run dev
 Open:
 
 - http://localhost:3000
+
+Then:
+
+1. Upload a CSV with the expected schema (see below).
+2. Click **Analyze**.
+3. Optionally use **Chat about this upload** to ask questions (the response streams).
 
 ## Build (production)
 
@@ -82,8 +109,16 @@ Notes:
   - Ensure `.env.local` exists at the project root and contains `ANTHROPIC_API_KEY=...`.
   - Restart `npm run dev` after editing `.env.local`.
 
+- **Chat fails with a model error (404 model not found)**
+  - Set `ANTHROPIC_MODEL` in `.env.local` to a model that your Anthropic account has access to.
+  - Restart `npm run dev` after changing the model.
+
 - **Port 3000 already in use**
   - Stop the process using port 3000, or start Next.js on a different port.
 
 - **Node version issues**
   - Make sure you are using Node 20.x.
+
+## PDF version of this README
+
+If you need a PDF copy, generate it from this `README.md`.
